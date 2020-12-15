@@ -3,8 +3,9 @@ import os
 import pickle 
 import sys
 
-from datastructures import *
-from datparse import *
+from dats import *
+from fileinfo import *
+from persist import *
 
 """
 desired actions from CLI and API:
@@ -46,33 +47,8 @@ def find_rom(fileinfo):
 
 # -- Main --
 
-datdir = os.path.dirname(os.path.realpath(__file__))
-
-try:
-    with open('data.cache', 'rb') as cache:
-        log.info('Loading DATs from cache')
-        data = pickle.load(cache)
-    for category, games in data.items():
-        log.debug(f'{category}: {len(games)} games / {sum(len(game.roms) for game in games)} roms')
-except:
-    log.info('Parsing DAT files')
-    data = {}
-    for root, dirs, files in os.walk(datdir):
-        dats = [os.path.join(root, f) for f in files if f.lower().endswith('.dat')]
-        for dat in dats:
-            parse_dat(dat, data)
-
-    log.info('Saving DATs to cache')
-    with open('data.cache', 'wb') as cache:
-        pickle.dump(data, cache)
-    pass
-
-try:
-    with open('fileinfo.cache', 'rb') as cache:
-        log.info('Loading file metadata from cache')
-        fileinfos = pickle.load(cache)
-except:
-    fileinfos = {}
+dats = load_dats()
+fileinfos = load('fileinfo-cache.pickle')
 
 log.info('Calculating checksums')
 
@@ -92,9 +68,7 @@ for d in sys.argv[1:]:
             infos_to_analyze.append(fileinfo)
 
 log.info('Saving file metadata to cache')
-
-with open('fileinfo.cache', 'wb') as cache:
-    pickle.dump(fileinfos, cache)
+save('fileinfo-cache.pickle', fileinfos)
 
 log.info('Calculating auxiliary data structures')
 md5s = {}
@@ -102,7 +76,7 @@ sha1s = {}
 crcs = {}
 category_for_game = {}
 game_for_rom = {}
-for category, games in data.items():
+for category, games in dats.items():
     for game in games:
         category_for_game[game] = category
         for rom in game.roms:
@@ -129,7 +103,7 @@ matched_categories = {category_for_game[game_for_rom[rom]] for rom in matches}
 for category in sorted(matched_categories):
     have = 0
     miss = 0
-    for game in data[category]:
+    for game in dats[category]:
         for rom in game.roms:
             if rom in matches:
                 have += 1
