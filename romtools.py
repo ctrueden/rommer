@@ -1,89 +1,35 @@
-import hashlib
 import logging
 import os
-import pathlib
 import pickle 
 import sys
-import zlib
 
-from xml.dom.minidom import parse
+from datastructures import *
+from datparse import *
+
+"""
+desired actions from CLI and API:
+- recursively index DAT files, storing into an efficiently persisted structure.
+- recursively index files and directories, storing metadata (checksums, length, last modified stamp)
+- for compressed files: index the contents of each constituent file.
+- report, for a list of files and set of DATs, which DATs are matched.
+- lean on 1g1r to generate 1G1R sets?
+
+class Dat(list)
+def import(path)
+TDD for API
+
+class Dats(list)
+def load(path)
+def find(FileInfo)
+
+class FileIndex(dict)? {str: FileInfo}
+def scan(path)
+
+class FileInfo [as File below]
+"""
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
-
-datdir = os.path.dirname(os.path.realpath(__file__))
-
-def mtime(path):
-    return pathlib.Path(path).stat().st_mtime
-
-# -- Data structures --
-
-class File:
-    def __init__(self, path):
-        self.path = path
-        with open(path, 'rb') as fh:
-            b = fh.read()
-        self.size = len(b)
-        self.md5 = hashlib.md5(b).hexdigest()
-        self.sha1 = hashlib.sha1(b).hexdigest()
-        crc = hex(zlib.crc32(b))[2:]
-        self.crc = '0'*(8-len(crc)) + crc
-        self.mtime = mtime(path)
-
-class Game:
-    def __init__(self, el):
-        self.name = el.getAttribute('name')
-        self.description = cdata(el.getElementsByTagName('description')[0])
-        self.roms = [Rom(child) for child in el.getElementsByTagName('rom')]
-
-class Rom:
-    def __init__(self, el):
-        self.name = el.getAttribute('name')
-        self.size = el.getAttribute('size')
-        try:
-            self.size = int(self.size)
-        except:
-            self.size = -1
-        self.crc = el.getAttribute('crc')
-        self.md5 = el.getAttribute('md5')
-        self.sha1 = el.getAttribute('sha1')
-
-# -- XML parsing functions --
-
-def cdata(el):
-    return el.firstChild.wholeText
-
-def parse_dat(dat):
-    try:
-        dom = parse(dat)
-    except:
-        # Probably not an XML file.
-        log.warning(f'Skipping unparseable file: {dat}')
-        return
-
-    category = None
-    try:
-        category = cdata(dom.getElementsByTagName('header')[0].getElementsByTagName('name')[0])
-    except:
-        pass
-    if not category:
-        try:
-            category = cdata(dom.getElementsByTagName('header')[0].getElementsByTagName('listname')[0])
-        except:
-            pass
-    if not category:
-        # Use filename without extension.
-        category = dat[dat.rfind('/')+1:dat.rfind('.')]
-    assert category
-
-    games = []
-    games.extend(Game(el) for el in dom.getElementsByTagName('machine'))
-    games.extend(Game(el) for el in dom.getElementsByTagName('game'))
-
-    log.info(f'{category}: {len(games)} games / {sum(len(game.roms) for game in games)} roms')
-
-    assert not category in data
-    data[category] = games
 
 # -- Hash matching functions --
 
@@ -100,6 +46,8 @@ def find_rom(fileinfo):
 
 # -- Main --
 
+datdir = os.path.dirname(os.path.realpath(__file__))
+
 try:
     with open('data.cache', 'rb') as cache:
         log.info('Loading DATs from cache')
@@ -112,7 +60,7 @@ except:
     for root, dirs, files in os.walk(datdir):
         dats = [os.path.join(root, f) for f in files if f.lower().endswith('.dat')]
         for dat in dats:
-            parse_dat(dat)
+            parse_dat(dat, data)
 
     log.info('Saving DATs to cache')
     with open('data.cache', 'wb') as cache:
@@ -178,7 +126,7 @@ for fileinfo in infos_to_analyze:
 log.info('Calculating statistics')
 
 matched_categories = {category_for_game[game_for_rom[rom]] for rom in matches}
-for category in matched_categories:
+for category in sorted(matched_categories):
     have = 0
     miss = 0
     for game in data[category]:
