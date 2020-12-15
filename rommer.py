@@ -8,11 +8,23 @@ from fileinfo import *
 from persist import *
 
 """
+Rommer is a tool for auditing ROMs and other binary files. It works by
+computing and caching checksums of your binary files, comparing them against
+databases of known values from [DAT files]() or other source.
+
 desired actions from CLI and API:
+
+rommer loaddats <path> ...
 - recursively index DAT files, storing into an efficiently persisted structure.
+
+rommer index <path> ...
 - recursively index files and directories, storing metadata (checksums, length, last modified stamp)
 - for compressed files: index the contents of each constituent file.
+
+rommer report <path> ...
 - report, for a list of files and set of DATs, which DATs are matched.
+
+rommer copy <path> ...
 - lean on 1g1r to generate 1G1R sets?
 
 class Dat(list)
@@ -27,6 +39,11 @@ class FileIndex(dict)? {str: FileInfo}
 def scan(path)
 
 class FileInfo [as File below]
+
+
+
+Romulus
+https://romulus.cc/
 """
 
 log = logging.getLogger(__name__)
