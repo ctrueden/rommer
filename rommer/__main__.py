@@ -26,12 +26,12 @@ def main(args=None):
         desc = f' {plugin.blurb}' if hasattr(plugin, 'blurb') else ''
         blurbs.append(f'{name:<21}{desc}')
     blurbs.append('')
-    blurbs.append('Run subcommand with -h flag for more detailed help.')
+    blurbs.append('Run subcommand followed by -h flag for more detailed help.')
 
     parser = argparse.ArgumentParser(description='Wrangle your ROMs.',
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-v', '--verbose', action='store_true', help='verbose mode')
-    subparsers = parser.add_subparsers(dest="command", description="\n".join(blurbs))
+    subparsers = parser.add_subparsers(dest="subcommand", description="\n".join(blurbs))
     subparsers.required = True
     for name, plugin in plugins.items():
         desc = f' {plugin.description}' if hasattr(plugin, 'description') else Non
@@ -40,7 +40,7 @@ def main(args=None):
     pargs = parser.parse_args(args)
     if pargs.verbose:
         logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
-    return plugins[pargs.command].run(pargs)
+    return plugins[pargs.subcommand].run(pargs)
 
 
 if __name__ == "__main__":
