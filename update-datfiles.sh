@@ -39,13 +39,13 @@ tosec_archive_filename=$(echo "$tosec_archive_link" | sed 's/.*>\([^<]*\.zip\)<.
 debug "tosec_archive_filename = $tosec_archive_filename"
 if [ -d TOSEC.backup ]; then rm -rf TOSEC.backup; fi
 if [ -d TOSEC ]; then mv TOSEC TOSEC.backup; fi
-mkdir TOSEC
-cd TOSEC
+mkdir -p dats/TOSEC
+cd dats/TOSEC
 echo "Downloading TOSEC DATs..."
 curl -fL "$tosec_archive_url" > "$tosec_archive_filename"
 echo "Unpacking TOSEC DATs..."
 unzip "$tosec_archive_filename" >/dev/null
-cd ..
+cd -
 
 # Download No-Intro DATs (via RomCenter).
 romcenter_download_page_url=https://www.romcenter.com/downloadpage/
@@ -59,10 +59,10 @@ romcenter_archive_filename=$(echo "$romcenter_archive_href" | sed 's/.*file=\(.*
 debug "romcenter_archive_filename = $romcenter_archive_filename"
 if [ -d RomCenter.backup ]; then rm -rf RomCenter.backup; fi
 if [ -d RomCenter ]; then mv RomCenter RomCenter.backup; fi
-mkdir RomCenter
-cd RomCenter
+mkdir -p dats/RomCenter
+cd dats/RomCenter
 echo "Download No-Intro DATs..."
 curl -fL "$romcenter_archive_url" > "$romcenter_archive_filename"
 echo "Unpacking No-Intro DATs..."
 7z x "$romcenter_archive_filename" >/dev/null
-cd ..
+cd -
