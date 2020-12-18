@@ -96,8 +96,7 @@ def run(args):
         dat = parse_dat(datpath)
         if dat:
             session.add(dat)
+            session.commit()
             log.info(f'--> {dat.name}: {len(dat.games)} games / {sum(len(game.roms) for game in dat.games)} roms')
 
-    log.info('Committing to DB...')
-    session.commit()
     log.info('Import complete.')
