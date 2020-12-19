@@ -110,6 +110,9 @@ def session():
             return pathlib.Path(self.path).stat() if self.path else None
 
         def is_dirty(self, stat):
+            # TODO: The below only tells us the file _might_ be dirty.
+            # We should then recompute hashes and see if any changed.
+            # If not, the file was merely touched, not modified.
             return self.size is None or self.mtime is None or \
                    self.size != stat.st_size or self.mtime < stat.st_mtime
 
@@ -179,7 +182,9 @@ def session():
         def __repr__(self):
             return f"<Game(dat={self.dat}, name='{self.name}', description='{self.description}')>"
 
-    Dat.games = relationship('Game', order_by=Game.id, back_populates='dat')
+    Dat.games = relationship('Game', order_by=Game.id,
+                             back_populates='dat',
+                             cascade="all, delete, delete-orphan")
 
 
     global Rom
@@ -201,7 +206,9 @@ def session():
         def __repr__(self):
             return f"<Rom(game={self.game}, name='{self.name}')>"
 
-    Game.roms = relationship('Rom', order_by=Rom.id, back_populates='game')
+    Game.roms = relationship('Rom', order_by=Rom.id,
+                             back_populates='game',
+                             cascade="all, delete, delete-orphan")
 
 
     Base.metadata.create_all(engine)

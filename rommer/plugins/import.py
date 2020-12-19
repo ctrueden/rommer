@@ -19,7 +19,7 @@ def cdata(root, tag):
     return els[0].firstChild.wholeText if els else None
 
 
-def parse_dat(path):
+def parse_dat(path, file=None):
     try:
         dom = parse(path)
     except:
@@ -48,7 +48,7 @@ def parse_dat(path):
                      date=date,
                      author=author,
                      url=url)
-    dat.file = rommer.File(path=path)
+    dat.file = file if file else rommer.File(path=path)
     dat.file.calculate_checksums()
     dat.games.extend(game(el) for el in dom.getElementsByTagName('machine'))
     dat.games.extend(game(el) for el in dom.getElementsByTagName('game'))
@@ -72,31 +72,37 @@ def rom(el):
 
 
 def run(args):
-    log.info('Connecting to DB...')
     session = rommer.session()
 
-    log.info('Scanning for DAT files...')
-    datpaths_to_parse = []
-    for path in args.path:
-        for root, dirs, files in os.walk(path):
-            datpaths = [os.path.join(root, f) for f in files if f.lower().endswith('.dat')]
-            for datpath in datpaths:
-                # TODO: fix to always use absolute path
-                existing_file = session.query(rommer.File).filter_by(path=datpath).first()
-                if existing_file:
-                    existing_dat = session.query(rommer.Dat).filter_by(file_id=existing_file.id).first()
-                    if existing_dat:
-                        # TODO: reparse if file is dirty
-                        log.info(f'Already imported: {datpath} -> {existing_dat.name}')
-                        continue
-                datpaths_to_parse.append(datpath)
+    log.info('Cataloging DAT files...')
+    dats = []
+    for datfile in rommer.find_files(args.path, '.dat'):
+        datpath = str(datfile.resolve())
+        existing_dat = None
+        existing_file = session.query(rommer.File).filter_by(path=datpath).first()
+        if existing_file:
+            existing_dat = session.query(rommer.Dat).filter_by(file_id=existing_file.id).first()
+        dats.append((datpath, existing_file, existing_dat))
 
-    for datpath in datpaths_to_parse:
-        log.info(f'Importing {datpath}...')
-        dat = parse_dat(datpath)
-        if dat:
-            session.add(dat)
-            session.commit()
-            log.info(f'--> {dat.name}: {len(dat.games)} games / {sum(len(game.roms) for game in dat.games)} roms')
+    log.info('Importing DAT files...')
+    for datpath, existing_file, existing_dat in dats:
+        if existing_dat:
+            if existing_file.is_dirty():
+                # Delete DAT and reimport.
+                log.info(f'Reimporting {datpath}...')
+                session.delete(existing_dat)
+            else:
+                # DAT file has not changed; no action needed.
+                log.info(f'Already imported: {datpath} -> {existing_dat.name}')
+                continue
+        else:
+            log.info(f'Importing {datpath}...')
+
+        # Import DAT.
+        dat = parse_dat(datpath, existing_file)
+
+        session.add(dat)
+        session.commit()
+        log.info(f'--> {dat.name}: {len(dat.games)} games / {sum(len(game.roms) for game in dat.games)} roms')
 
     log.info('Import complete.')
