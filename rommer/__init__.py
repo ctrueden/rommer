@@ -36,6 +36,28 @@ log = logging.getLogger(__name__)
 Session = None
 
 
+def find_files(paths, suffix=None):
+    """
+    Find all files at or beneath the given paths, of the specified suffix.
+    :param paths: The paths to search for matching files.
+    :param suffix: The file extension to which matches should be constrained.
+    :return: A list of matching pathlib.Path objects.
+    """
+    # TODO: Handle suffix case-insensitively in a cross-platform way.
+    # https://jdhao.github.io/2019/06/24/python_glob_case_sensitivity/
+    files = []
+    for path in paths:
+        if not isinstance(path, pathlib.Path):
+            path = pathlib.Path(path)
+        if path.is_file():
+            if suffix is None or path.suffix == suffix:
+                files.append(path)
+        else:
+            glob = f'*.{suffix}' if suffix else '*'
+            files.extend(path.rglob('*'))
+    return files
+
+
 def config_dir():
     """
     Get the location where rommer stores its configuration, notably the SQLite3
