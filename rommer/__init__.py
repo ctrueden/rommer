@@ -35,6 +35,21 @@ from sqlalchemy.orm import relationship, sessionmaker
 log = logging.getLogger(__name__)
 Session = None
 
+
+def config_dir():
+    """
+    Get the location where rommer stores its configuration, notably the SQLite3
+    database. To override it, set the ROMMER_CONFIG environment variable.
+    """
+    ROMMER_CONFIG = os.getenv('ROMMER_CONFIG')
+    config_dir = pathlib.Path(ROMMER_CONFIG) if ROMMER_CONFIG else pathlib.Path.home() / '.config' / 'rommer'
+    if not config_dir.exists():
+        config_dir.mkdir()
+    if not os.path.isdir(config_dir):
+        raise f'Someone stole my config spot ({config_dir})'
+    return config_dir
+
+
 def session():
     """
     Create a session for interacting with the rommer database.
@@ -47,17 +62,8 @@ def session():
     if Session:
         return Session.session()
 
-    ROMMER_CONFIG = os.getenv('ROMMER_CONFIG')
-    config_dir = pathlib.Path(ROMMER_CONFIG) if ROMMER_CONFIG else pathlib.Path.home() / '.config' / 'rommer'
-    if not config_dir.exists():
-        config_dir.mkdir()
-    if not os.path.isdir(config_dir):
-        raise f'Someone stole my config spot ({config_dir})'
-
-    rommer_db_path = config_dir / 'rommer.db'
-
+    rommer_db_path = config_dir() / 'rommer.db'
     engine = create_engine(f'sqlite:///{rommer_db_path}')
-
     Base = declarative_base()
 
 
