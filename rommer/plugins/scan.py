@@ -1,4 +1,6 @@
 import logging
+import rommer
+import time
 
 log = logging.getLogger(__name__)
 
@@ -10,44 +12,35 @@ def configure(parser):
     parser.add_argument('path', nargs='+', help='file path to scan')
 
 
-"""
-def is_match(key, dictionary, size):
-    if key in dictionary:
-        rom = dictionary[key]
-        if rom.size == size:
-            return rom
-
-
-def find_rom(fileinfo):
-    return is_match(fileinfo.md5,  md5s,  fileinfo.size) or \
-           is_match(fileinfo.sha1, sha1s, fileinfo.size) or \
-           is_match(fileinfo.crc,  crcs,  fileinfo.size)
-"""
-
 def run(args):
-    print(f'run scan: {args}')
+    session = rommer.session()
 
-"""
-    dats = load_dats()
-    fileinfos = load('fileinfo.cache')
+    log.info('Cataloging files...')
+    files = []
+    for file in rommer.find_files(args.path):
+        path = str(file.resolve())
+        existing_file = session.query(rommer.File).filter_by(path=path).first()
+        files.append((path, existing_file))
 
-    log.info('Calculating checksums')
+    log.info('Scanning files...')
+    then = time.time()
+    for path, existing_file in files:
+        if existing_file:
+            log.info(f'Updating {path}...')
+            existing_file.calculate_checksums()
+        else:
+            log.info(f'Processing {path}...')
+            file = rommer.File(path=path)
+            file.calculate_checksums()
+            session.add(file)
+            log.info(f'--> {file.path}: size={file.size}, sha1={file.sha1}, md5={file.md5}, crc={file.crc}')
+        now = time.time()
+        if now - then > 10:
+            # Flush transaction every ~10 seconds.
+            log.info('Committing to DB...')
+            session.commit()
+            then = now
 
-    infos_to_analyze = []
-    for d in sys.argv[1:]:
-        for root, dirs, files in os.walk(d):
-            for f in files:
-                if f.lower().endswith('.zip') or f.lower().endswith('.7z'):
-                    log.warning(f'Skipping compressed file: {f}')
-                    continue
-                path = os.path.join(root, f)
-                if path in fileinfos and mtime(path) == fileinfos[path].mtime:
-                    fileinfo = fileinfos[path]
-                else:
-                    fileinfo = File(path)
-                    fileinfos[path] = fileinfo
-                infos_to_analyze.append(fileinfo)
-
-    log.info('Saving file metadata to cache')
-    save('fileinfo.cache', fileinfos)
-"""
+    log.info('Committing to DB...')
+    session.commit()
+    log.info('Scan complete.')
