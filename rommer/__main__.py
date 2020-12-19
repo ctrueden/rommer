@@ -1,3 +1,7 @@
+"""
+Main entry point for the rommer command line tool.
+"""
+
 import argparse
 import importlib
 import logging

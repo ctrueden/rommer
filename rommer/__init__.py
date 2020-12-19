@@ -1,16 +1,3 @@
-import logging
-import os
-import sys
-
-import hashlib
-import os
-import pathlib
-import zlib
-
-from sqlalchemy import create_engine, Column, ForeignKey, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
-
 """
 Rommer is a tool for auditing ROMs and other binary files. It works by
 computing checksums of your binary files, comparing them against databases
@@ -20,7 +7,7 @@ Both databases and indexed binary files are stored in a persistent SQLite3
 database, so that subsequent queries on the same files are fast.
 
 rommer import <path> ...
-- recursively import DAT files, storing into an efficiently persisted structure.
+- import DAT files beneath the given paths into the database
 
 rommer scan <path> ...
 - recursively index files and directories, storing metadata (checksums, length, last modified stamp)
@@ -33,11 +20,29 @@ rommer copy <path> ...
 - lean on 1g1r to generate 1G1R sets?
 """
 
-log = logging.getLogger(__name__)
+import logging
+import os
+import sys
 
+import hashlib
+import pathlib
+import zlib
+
+from sqlalchemy import create_engine, Column, ForeignKey, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, sessionmaker
+
+log = logging.getLogger(__name__)
 Session = None
 
 def session():
+    """
+    Create a session for interacting with the rommer database.
+    The database is initialized and connected as needed.
+
+    :return: a new SQLAlchemy Session object; for introduction to usage, see:
+             https://docs.sqlalchemy.org/en/13/orm/session_basics.html#basics-of-using-a-session
+    """
     global Session
     if Session:
         return Session.session()
