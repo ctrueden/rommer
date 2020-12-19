@@ -94,7 +94,6 @@ def session():
         """
         Metadata about a binary file.
         """
-
         __tablename__ = 'files'
 
         id = Column(Integer, primary_key=True)
