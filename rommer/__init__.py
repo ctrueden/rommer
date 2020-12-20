@@ -54,7 +54,7 @@ def find_files(paths, suffix=None):
                 files.append(path)
         else:
             glob = f'*.{suffix}' if suffix else '*'
-            files.extend(path.rglob('*'))
+            files.extend(f for f in path.rglob('*') if f.is_file())
     return files
 
 
