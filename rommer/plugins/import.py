@@ -85,6 +85,7 @@ def run(args):
         dats.append((datpath, existing_file, existing_dat))
 
     log.info('Importing DAT files...')
+    pending_rows = 0
     for datpath, existing_file, existing_dat in dats:
         if existing_dat:
             if existing_file.is_dirty():
@@ -100,9 +101,16 @@ def run(args):
 
         # Import DAT.
         dat = parse_dat(datpath, existing_file)
-
+        game_count = len(dat.games)
+        rom_count = sum(len(game.roms) for game in dat.games)
+        pending_rows += 1 + game_count + rom_count
         session.add(dat)
-        session.commit()
-        log.info(f'--> {dat.name}: {len(dat.games)} games / {sum(len(game.roms) for game in dat.games)} roms')
+        log.info(f'--> {dat.name}: {game_count} games / {rom_count} roms')
 
+        if pending_rows >= 10000:
+            # Avoid transactions getting too large.
+            session.commit()
+            pending_rows = 0
+
+    session.commit()
     log.info('Import complete.')
