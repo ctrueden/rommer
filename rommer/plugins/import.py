@@ -64,11 +64,11 @@ def game(el):
 
 
 def rom(el):
-    file = rommer.File(size=el.getAttribute('size'),
-                       sha1=el.getAttribute('sha1'),
-                       md5=el.getAttribute('md5'),
-                       crc=el.getAttribute('crc'))
-    return rommer.Rom(file=file, name=el.getAttribute('name'))
+    return rommer.Rom(name=el.getAttribute('name'),
+                      size=el.getAttribute('size'),
+                      crc=el.getAttribute('crc'),
+                      md5=el.getAttribute('md5'),
+                      sha1=el.getAttribute('sha1'))
 
 
 def run(args):

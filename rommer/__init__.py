@@ -99,11 +99,11 @@ def session():
         id = Column(Integer, primary_key=True)
 
         path = Column(String)
-        size = Column(Integer)
         mtime = Column(Integer)
-        sha1 = Column(String)
-        md5 = Column(String)
+        size = Column(Integer)
         crc = Column(String)
+        md5 = Column(String)
+        sha1 = Column(String)
 
         def stat(self):
             return pathlib.Path(self.path).stat() if self.path else None
@@ -123,18 +123,18 @@ def session():
             if recalc or self.is_dirty(stat):
                 self.size = stat.st_size
                 self.mtime = stat.st_mtime
-                self.sha1 = self.md5 = self.crc = None
+                self.crc = self.md5 = self.sha1 = None
 
             if not self.sha1 or not self.md5 or not self.crc:
                 # Read file contents; we need to compute something from it.
                 with open(self.path, 'rb') as fh:
                     b = fh.read()
                 assert len(b) == self.size
-                if not self.md5: self.md5 = hashlib.md5(b).hexdigest()
-                if not self.sha1: self.sha1 = hashlib.sha1(b).hexdigest()
                 if not self.crc:
                     crc = hex(zlib.crc32(b))[2:]
                     self.crc = '0'*(8-len(crc)) + crc
+                if not self.md5: self.md5 = hashlib.md5(b).hexdigest()
+                if not self.sha1: self.sha1 = hashlib.sha1(b).hexdigest()
 
         def __repr__(self):
             return f"<File(path='{self.path}', size={self.size}, mtime={self.mtime}, sha1={self.sha1}, md5={self.md5}, crc={self.crc})>"
@@ -195,15 +195,17 @@ def session():
 
         id = Column(Integer, primary_key=True)
         game_id = Column(Integer, ForeignKey('games.id'))
-        file_id = Column(Integer, ForeignKey('files.id'))
 
         name = Column(String)
+        size = Column(Integer)
+        crc = Column(String)
+        md5 = Column(String)
+        sha1 = Column(String)
 
         game = relationship('Game', back_populates='roms')
-        file = relationship('File')
 
         def __repr__(self):
-            return f"<Rom(game={self.game}, name='{self.name}')>"
+            return f"<Rom(game={self.game}, name='{self.name}'), size='{self.size}'), crc='{self.crc}'), md5='{self.md5}'), sha1='{self.sha1}')>"
 
     Game.roms = relationship('Rom', order_by=Rom.id,
                              back_populates='game',
