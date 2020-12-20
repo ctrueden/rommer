@@ -10,6 +10,9 @@ description = 'Display DAT matches for the given path(s).'
 
 
 def configure(parser):
+    parser.add_argument('--have', action='store_true', help='print matched ROMs')
+    parser.add_argument('--miss', action='store_true', help='print missing ROMs')
+    parser.add_argument('--unmatched', action='store_true', help='print unmatched file paths')
     parser.add_argument('path', nargs='+', help='file paths to analyze')
 
 
@@ -57,11 +60,18 @@ def run(args):
             for rom in game.roms:
                 if rom.id in matched_roms:
                     have += 1
+                    if args.have:
+                        print(f'--> {rom.name} -> {matched_roms[rom.id]}')
                 else:
                     miss += 1
+                    if args.miss:
+                        print(f'--> [MISSING] {rom.name}')
         if have > 0:
             total = have + miss
             percent = 100 * have / total
             print(f'{dat.name}: {have}/{total} ({percent}%)')
 
     print(f'Unmatched: {len(files) - len(matched_files)} / {len(files)}')
+    if args.unmatched:
+        for f in sorted(files.difference(matched_files)):
+            print(f'--> {f}')
