@@ -19,6 +19,11 @@ def configure(parser):
 def run(args):
     session = rommer.session()
 
+    dat_count = session.query(rommer.Dat.id).count()
+    if dat_count == 0:
+        log.error('No DATs available. Use "rommer import" first to add some.')
+        return 1
+
     # TODO: Probably this should be combined with scan.
     # For scanning, if the file is new, we add it...
     # And then we do the commit, and finally the big join query.
