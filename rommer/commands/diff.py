@@ -7,17 +7,42 @@ import time
 log = logging.getLogger(__name__)
 
 blurb = 'compute similarity of binary files'
-description = '''Compare files for identical byte sequences.
+description = '''Compare files for matching byte sequences.
 
-Each file is indexed in blocks
+The command prints a similarity percentage between every pair of input files.
+
+Each byte-triple is interpreted as an integer value in range(0, 2**24):
+
+    ABC, BCD, CDE, DEF, EFG, FGH, GHI, HIJ, IJK, JKL, etc.
+
+These values are counted, then hashed with their adjacent triple:
+
+    ABC, BCD, CDE, DEF, EFG, FGH, GHI, etc.
+    ^^^            ^^^
+     \--------------/
+            |
+           A-F, B-G, C-H, D-I, E-J, F-K, G-L, etc.
+
+These combined 24-bit values are then counted and merged again:
+
+           A-F, B-G, C-H, D-I, E-J, F-K, G-L, etc.
+           ^^^                           ^^^
+            \-----------------------------/
+                           |
+                          A-L, B-M, C-N, etc.
+
+And so on until each hashed value spans more than 50% of the file,
+at which point the process cannot continue.
 '''
 
 
 def configure(parser):
-    parser.add_argument('path', nargs='+', help='file path to scan')
+    parser.add_argument('path', nargs='+', help='file path to compare')
 
 
 def _count_blocks(values, counts, spread):
+    # TODO: Count higher-spread aggregate values with more weight.
+    # The question is: how much more?
     counts.update(values)
     if len(values) <= spread:
         return
