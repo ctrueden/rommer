@@ -26,10 +26,17 @@ Import DATs to the Rommer database:
 rommer import /path/to/my/dat-files
 ```
 
-Scan ROMs to see what matches:
+Scan your ROMs:
+```
+rommer scan /path/to/my/rom-files
+
+```
+Generate a Report on what matches:
 ```
 rommer report /path/to/my/rom-files
 ```
+
+In the near future, `scan` and `report` will be combined into one command.
 
 Use `rommer -h` for a list of available commands.
 For help with a specific command, use e.g. `rommer import -h`.
