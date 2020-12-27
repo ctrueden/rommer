@@ -12,7 +12,7 @@ cd rommer
 python setup.py install
 ```
 
-As usual with Python programs, you probably want to be a
+As usual with Python programs, you probably want to be inside a
 [virtual environment](https://docs.python.org/3/tutorial/venv.html)
 before installing—or else install for the current user only via:
 ```
@@ -21,22 +21,15 @@ python setup.py install --user --prefix=
 
 ## Usage
 
-Import DATs to the Rommer database:
-```
-rommer import /path/to/my/dat-files
-```
+1. Import DATs to the Rommer database:
+   ```
+   rommer import /path/to/my/dat-files
+   ```
 
-Scan your ROMs:
-```
-rommer scan /path/to/my/rom-files
-
-```
-Generate a Report on what matches:
-```
-rommer report /path/to/my/rom-files
-```
-
-In the near future, `scan` and `report` will be combined into one command.
+2. Scan your ROMs to generate a report on what matches:
+   ```
+   rommer report /path/to/my/rom-files
+   ```
 
 Use `rommer -h` for a list of available commands.
 For help with a specific command, use e.g. `rommer import -h`.
@@ -79,3 +72,5 @@ Of these, ROMba comes closest to meeting my needs. But:
 - It imposes a specific storage mechanism for managed ROMs.
 - The "command line" functionality is actually a web shell.
 - I don't want my ROM management tool running as a server.
+
+So I wrote my own thing. Maybe it helps someone else too?
