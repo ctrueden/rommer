@@ -91,16 +91,21 @@ def run(args):
             for rom in game.roms:
                 if rom.id in matched_roms:
                     have += 1
-                    if args.have:
-                        print(f'--> {rom.name} -> {matched_roms[rom.id]}')
                 else:
                     miss += 1
-                    if args.miss:
-                        print(f'--> [MISSING] {rom.name}')
         if have > 0:
             total = have + miss
             percent = 100 * have / total
             print(f'{dat.name}: {have}/{total} ({percent}%)')
+
+        if args.have or args.miss:
+            for game in dat.games:
+                for rom in game.roms:
+                    match = rom.id in matched_roms
+                    if args.have and match:
+                        print(f'--> {rom.name} -> {matched_roms[rom.id]}')
+                    if args.miss and not match:
+                        print(f'--> [MISSING] {rom.name}')
 
     print(f'Unmatched: {len(files) - len(matched_files)} / {len(files)}')
     if args.unmatched:
