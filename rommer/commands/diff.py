@@ -1,4 +1,5 @@
 import collections
+import functools
 import itertools
 import logging
 import rommer
@@ -40,19 +41,27 @@ def configure(parser):
     parser.add_argument('path', nargs='+', help='file path to compare')
 
 
+def _combine(x, y):
+    # TODO: Improve combine function. Result must be in [0, 2**24).
+    return x ^ y
+    #return (0xaaa & (x ^ 0xfa7)) | (0x555 & (y ^ 0xc4b))
+
+
 def _count_blocks(values, counts, spread):
     # TODO: Count higher-spread aggregate values with more weight.
     # The question is: how much more?
     counts.update(values)
     if len(values) <= spread:
+        # Hash what's left together, to help avoid false 100% reports.
+        fv = [functools.reduce(_combine, values)]
+        print(fv)
+        counts.update(fv)
         return
 
     # Merge adjacent values and recurse
     nv = []
     for i in range(len(values) - spread):
-        # TODO: Improve hash combine function. Result must be in [0, 2**24).
-        # But much better would be for (a, b) != (b, a).
-        nv.append(values[i] ^ values[i+spread])
+        nv.append(_combine(values[i], values[i+spread]))
     _count_blocks(nv, counts, spread * 2)
 
 
