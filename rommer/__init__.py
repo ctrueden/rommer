@@ -108,7 +108,9 @@ def session():
         def stat(self):
             return pathlib.Path(self.path).stat() if self.path else None
 
-        def is_dirty(self, stat):
+        def is_dirty(self, stat=None):
+            if stat is None:
+                stat = self.stat()
             # TODO: The below only tells us the file _might_ be dirty.
             # We should then recompute hashes and see if any changed.
             # If not, the file was merely touched, not modified.
