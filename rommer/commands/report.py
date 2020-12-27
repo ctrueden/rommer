@@ -1,5 +1,6 @@
 import logging
 import rommer
+import time
 
 from sqlalchemy.orm import joinedload
 
@@ -24,9 +25,34 @@ def run(args):
         log.error('No DATs available. Use "rommer import" first to add some.')
         return 1
 
-    # TODO: Probably this should be combined with scan.
-    # For scanning, if the file is new, we add it...
-    # And then we do the commit, and finally the big join query.
+    log.info('Cataloging files...')
+    files = []
+    for file in rommer.find_files(args.path):
+        path = str(file.resolve())
+        existing_file = session.query(rommer.File).filter_by(path=path).first()
+        files.append((path, existing_file))
+
+    log.info('Scanning files...')
+    then = time.time()
+    for path, existing_file in files:
+        if existing_file:
+            log.info(f'Updating {path}...')
+            existing_file.calculate_checksums()
+        else:
+            log.info(f'Processing {path}...')
+            file = rommer.File(path=path)
+            file.calculate_checksums()
+            session.add(file)
+            log.info(f'--> {file.path}: size={file.size}, sha1={file.sha1}, md5={file.md5}, crc={file.crc}')
+        now = time.time()
+        if now - then > 10:
+            # Flush transaction every ~10 seconds.
+            log.info('Committing to DB...')
+            session.commit()
+            then = now
+
+    log.info('Committing to DB...')
+    session.commit()
 
     log.info('Scanning for matches')
     files = set(str(file.resolve()) for file in rommer.find_files(args.path))
