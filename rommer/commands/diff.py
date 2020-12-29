@@ -7,6 +7,10 @@ import time
 
 log = logging.getLogger(__name__)
 
+# TODO - check out these projects of interest:
+# - https://github.com/mendsley/bsdiff
+# - https://radareorg.github.io/blog/posts/binary-diffing/
+
 blurb = 'compute similarity of binary files'
 description = '''Compare files for matching byte sequences.
 
