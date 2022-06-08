@@ -1,0 +1,18 @@
+# Use this file to construct an environment
+# for developing rommer from source.
+#
+#   mamba env create -f dev-environment.yml
+#   mamba activate rommer-dev
+
+name: rommer-dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python >= 3.7
+  # Project dependencies
+  - sqlalchemy
+  # Project from source
+  - pip
+  - pip:
+    - -e .
