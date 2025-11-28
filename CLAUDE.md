@@ -43,10 +43,11 @@ uv run python -m pytest -v tests/test_foo.py::test_bar  # Run specific test
 
 **Running the Application:**
 ```bash
-uv run rommer -h              # Show help
-uv run rommer import <path>   # Import DAT files
-uv run rommer report <path>   # Generate ROM matching report
-uv run rommer diff <path>...  # Compare binary file similarity
+uv run rommer -h                     # Show help
+uv run rommer update                 # Download DAT files (planned feature)
+uv run rommer import <path>          # Import DAT files
+uv run rommer report <path>          # Generate ROM matching report
+uv run rommer diff <path>...         # Compare binary file similarity
 ```
 
 **Build:**
@@ -118,6 +119,14 @@ Commands are auto-discovered plugins in `src/rommer/commands/`. Each command mod
 - Uses hierarchical hash aggregation of 24-bit byte triples
 - Computes similarity percentage for all file pairs
 
+**`update`** (`src/rommer/commands/update.py`):
+- **Status: Skeleton implementation, not yet functional**
+- Planned: Download DAT files from online sources (OpenGood, TOSEC, No-Intro, Redump, MAME)
+- Will cache downloads in `~/.local/share/rommer/dats/` (override with `ROMMER_DATA`)
+- See `update-datfiles.sh` for partial shell-based implementation
+- See `UPDATE_FEATURE_DESIGN.md` for complete implementation plan
+- **Note:** OpenGood (from GitHub) is recommended as first implementation target
+
 ## Key Patterns and Utilities
 
 **File discovery (`find_files()` in `src/rommer/__init__.py`):**
@@ -129,6 +138,10 @@ Commands are auto-discovered plugins in `src/rommer/commands/`. Each command mod
 - Global singleton pattern using `sessionmaker`
 - Initializes database schema on first call
 - Models are defined dynamically inside `session()` function (unusual pattern)
+
+**Data directories:**
+- Database: `~/.config/rommer/rommer.db` (override with `ROMMER_CONFIG`)
+- DAT downloads: `~/.local/share/rommer/dats/` (override with `ROMMER_DATA`)
 
 **Checksum calculation:**
 - Files use `calculate_checksums()` which checks `is_dirty()` first
@@ -142,3 +155,29 @@ Commands are auto-discovered plugins in `src/rommer/commands/`. Each command mod
 - Report command commits every ~10 seconds during file scanning
 - DAT parsing assumes XML format with `<header>`, `<game>`/`<machine>`, and `<rom>` elements
 - The `dl.py` module contains incomplete/commented code for future download features
+
+## DAT Sources
+
+Rommer supports various DAT file sources for ROM validation:
+
+- **OpenGood** (../opengood/): Community-created DATs from GoodTools (April 2016 snapshot)
+  - 35 classic platforms, 48 DAT files
+  - Historical preservation, valuable for matching older ROM dumps
+  - Standard Logiqx XML format, fully compatible with rommer
+  - Source: https://github.com/SnowflakePowered/opengood
+
+- **TOSEC** (dats/TOSEC/): The Old School Emulation Center
+  - Hundreds of platforms, massive DAT collection
+  - Current update mechanism in `update-datfiles.sh` (scrapes website)
+
+- **No-Intro** (dats/No-Intro/): Cartridge ROM preservation project
+  - Most authoritative for cartridge systems
+  - Current update via RomCenter mirror (outdated)
+
+- **Redump** (dats/redump.org/): Disc-based system preservation
+  - PlayStation, Dreamcast, GameCube, etc.
+  - Requires account for full access
+
+- **GoodTools** (dats/GoodTools/): Legacy Windows .exe tools
+  - Closed-source, no actual DAT files (data baked into executables)
+  - Superseded by OpenGood for open access
