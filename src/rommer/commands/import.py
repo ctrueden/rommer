@@ -81,18 +81,30 @@ def run(args):
     session = rommer.session()
 
     datfile_list = list(rommer.find_files(args.path, ".dat"))
-    dats = []
+    datpaths = [str(f.resolve()) for f in datfile_list]
+
+    # Bulk queries: fetch all existing files and dats at once.
     verbose = log.isEnabledFor(logging.INFO)
+    existing_files = (
+        session.query(rommer.File).filter(rommer.File.path.in_(datpaths)).all()
+    )
+    existing_files_map = {f.path: f for f in existing_files}
+
+    file_ids = [f.id for f in existing_files]
+    existing_dats = (
+        session.query(rommer.Dat).filter(rommer.Dat.file_id.in_(file_ids)).all()
+    )
+    existing_dats_map = {d.file_id: d for d in existing_dats}
+
+    dats = []
     for datfile in tqdm(
         datfile_list, desc="Cataloging DAT files", unit="file", disable=None
     ):
         datpath = str(datfile.resolve())
-        existing_dat = None
-        existing_file = session.query(rommer.File).filter_by(path=datpath).first()
-        if existing_file:
-            existing_dat = (
-                session.query(rommer.Dat).filter_by(file_id=existing_file.id).first()
-            )
+        existing_file = existing_files_map.get(datpath)
+        existing_dat = (
+            existing_dats_map.get(existing_file.id) if existing_file else None
+        )
         dats.append((datpath, existing_file, existing_dat))
 
     pending_rows = 0

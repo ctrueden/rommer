@@ -30,11 +30,19 @@ def run(args):
         return 1
 
     file_list = list(rommer.find_files(args.path))
-    files = []
+    paths = [str(f.resolve()) for f in file_list]
+
+    # Bulk query: fetch all existing files at once.
     verbose = log.isEnabledFor(logging.INFO)
+    existing_files = (
+        session.query(rommer.File).filter(rommer.File.path.in_(paths)).all()
+    )
+    existing_files_map = {f.path: f for f in existing_files}
+
+    files = []
     for file in tqdm(file_list, desc="Cataloging files", unit="file", disable=None):
         path = str(file.resolve())
-        existing_file = session.query(rommer.File).filter_by(path=path).first()
+        existing_file = existing_files_map.get(path)
         files.append((path, existing_file))
 
     then = time.time()
@@ -68,9 +76,13 @@ def run(args):
     session.commit()
 
     log.info("Scanning for matches")
-    files = set(str(file.resolve()) for file in rommer.find_files(args.path))
+    # Reuse paths from cataloging step.
+    files_set = set(paths)
     matches = (
         session.query(rommer.Rom, rommer.File)
+        .join(rommer.Game, rommer.Rom.game_id == rommer.Game.id)
+        .join(rommer.Dat, rommer.Game.dat_id == rommer.Dat.id)
+        .options(joinedload(rommer.Rom.game).joinedload(rommer.Game.dat))
         .filter(rommer.Rom.sha1 == rommer.File.sha1)
         .filter(rommer.Rom.md5 == rommer.File.md5)
         .filter(rommer.Rom.crc == rommer.File.crc)
@@ -85,23 +97,26 @@ def run(args):
     for match in matches:
         file = match[1]
         count += 1
-        if file.path not in files:
+        if file.path not in files_set:
             continue
         matched_files.add(file.path)
         rom = match[0]
         if rom.id not in matched_roms:
             matched_roms[rom.id] = []
+        # No lazy loading here - already eager loaded with joinedload above.
         matched_dats.add(rom.game.dat.id)
         matched_roms[rom.id].append(file.path)
 
     log.info("Calculating statistics")
-    for dat_id in matched_dats:
-        dat = (
-            session.query(rommer.Dat)
-            .options(joinedload(rommer.Dat.games).joinedload(rommer.Game.roms))
-            .filter_by(id=dat_id)
-            .first()
-        )
+    # Bulk query: fetch all matched DATs at once.
+    dats = (
+        session.query(rommer.Dat)
+        .options(joinedload(rommer.Dat.games).joinedload(rommer.Game.roms))
+        .filter(rommer.Dat.id.in_(matched_dats))
+        .all()
+    )
+
+    for dat in dats:
         have = 0
         miss = 0
         for game in dat.games:
@@ -124,7 +139,7 @@ def run(args):
                     if args.miss and not match:
                         print(f"--> [MISSING] {rom.name}")
 
-    print(f"Unmatched: {len(files) - len(matched_files)} / {len(files)}")
+    print(f"Unmatched: {len(files_set) - len(matched_files)} / {len(files_set)}")
     if args.unmatched:
-        for f in sorted(files.difference(matched_files)):
+        for f in sorted(files_set.difference(matched_files)):
             print(f"--> {f}")
