@@ -35,6 +35,20 @@ log = logging.getLogger(__name__)
 Session = None
 
 
+def vlog(message, verbose=True):
+    """
+    Log a message that works nicely with tqdm progress bars.
+    Use this instead of log.info() when progress bars are active.
+
+    :param message: The message to log
+    :param verbose: Whether verbose mode is enabled (pass log.isEnabledFor(logging.INFO))
+    """
+    if verbose:
+        from tqdm import tqdm
+
+        tqdm.write(f"[INFO] {message}")
+
+
 def find_files(paths, suffix=None):
     """
     Find all files at or beneath the given paths, of the specified suffix.

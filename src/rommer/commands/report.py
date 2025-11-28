@@ -1,8 +1,10 @@
 import logging
+import os
 import rommer
 import time
 
 from sqlalchemy.orm import joinedload
+from tqdm import tqdm
 
 log = logging.getLogger(__name__)
 
@@ -27,35 +29,42 @@ def run(args):
         log.error('No DATs available. Use "rommer import" first to add some.')
         return 1
 
-    log.info("Cataloging files...")
+    file_list = list(rommer.find_files(args.path))
     files = []
-    for file in rommer.find_files(args.path):
+    verbose = log.isEnabledFor(logging.INFO)
+    for file in tqdm(file_list, desc="Cataloging files", unit="file", disable=None):
         path = str(file.resolve())
         existing_file = session.query(rommer.File).filter_by(path=path).first()
         files.append((path, existing_file))
 
-    log.info("Scanning files...")
     then = time.time()
-    for path, existing_file in files:
-        if existing_file:
-            log.info(f"Updating {path}...")
-            existing_file.calculate_checksums()
-        else:
-            log.info(f"Processing {path}...")
-            file = rommer.File(path=path)
-            file.calculate_checksums()
-            session.add(file)
-            log.info(
-                f"--> {file.path}: size={file.size}, sha1={file.sha1}, md5={file.md5}, crc={file.crc}"
-            )
-        now = time.time()
-        if now - then > 10:
-            # Flush transaction every ~10 seconds.
-            log.info("Committing to DB...")
-            session.commit()
-            then = now
+    with tqdm(files, desc="Scanning files", unit="file", disable=None) as pbar:
+        for path, existing_file in pbar:
+            # Update progress bar with current file name
+            filename = os.path.basename(path)
+            pbar.set_postfix_str(filename[:40])
 
-    log.info("Committing to DB...")
+            if existing_file:
+                rommer.vlog(f"Updating {path}...", verbose)
+                existing_file.calculate_checksums()
+            else:
+                rommer.vlog(f"Processing {path}...", verbose)
+                file = rommer.File(path=path)
+                file.calculate_checksums()
+                session.add(file)
+                rommer.vlog(
+                    f"--> {file.path}: size={file.size}, sha1={file.sha1}, md5={file.md5}, crc={file.crc}",
+                    verbose,
+                )
+
+            now = time.time()
+            if now - then > 10:
+                # Flush transaction every ~10 seconds.
+                rommer.vlog("Committing to DB...", verbose)
+                session.commit()
+                then = now
+
+    rommer.vlog("Committing to DB...", verbose)
     session.commit()
 
     log.info("Scanning for matches")

@@ -1,6 +1,8 @@
 import logging
+import os
 import rommer
 
+from tqdm import tqdm
 from xml.dom.minidom import parse
 
 log = logging.getLogger(__name__)
@@ -78,9 +80,12 @@ def rom(el):
 def run(args):
     session = rommer.session()
 
-    log.info("Cataloging DAT files...")
+    datfile_list = list(rommer.find_files(args.path, ".dat"))
     dats = []
-    for datfile in rommer.find_files(args.path, ".dat"):
+    verbose = log.isEnabledFor(logging.INFO)
+    for datfile in tqdm(
+        datfile_list, desc="Cataloging DAT files", unit="file", disable=None
+    ):
         datpath = str(datfile.resolve())
         existing_dat = None
         existing_file = session.query(rommer.File).filter_by(path=datpath).first()
@@ -90,33 +95,43 @@ def run(args):
             )
         dats.append((datpath, existing_file, existing_dat))
 
-    log.info("Importing DAT files...")
     pending_rows = 0
-    for datpath, existing_file, existing_dat in dats:
-        if existing_dat:
-            if existing_file.is_dirty():
-                # Delete DAT and reimport.
-                log.info(f"Reimporting {datpath}...")
-                session.delete(existing_dat)
+    with tqdm(dats, desc="Importing DAT files", unit="file", disable=None) as pbar:
+        for datpath, existing_file, existing_dat in pbar:
+            # Update progress bar with current DAT name
+            filename = os.path.basename(datpath)
+            pbar.set_postfix_str(filename[:40])
+
+            if existing_dat:
+                if existing_file.is_dirty():
+                    # Delete DAT and reimport.
+                    rommer.vlog(f"Reimporting {datpath}...", verbose)
+                    session.delete(existing_dat)
+                else:
+                    # DAT file has not changed; no action needed.
+                    rommer.vlog(
+                        f"Already imported: {datpath} -> {existing_dat.name}", verbose
+                    )
+                    continue
             else:
-                # DAT file has not changed; no action needed.
-                log.info(f"Already imported: {datpath} -> {existing_dat.name}")
+                rommer.vlog(f"Importing {datpath}...", verbose)
+
+            # Import DAT.
+            dat = parse_dat(datpath, existing_file)
+            if dat is None:
                 continue
-        else:
-            log.info(f"Importing {datpath}...")
+            game_count = len(dat.games)
+            rom_count = sum(len(game.roms) for game in dat.games)
+            pending_rows += 1 + game_count + rom_count
+            session.add(dat)
+            rommer.vlog(
+                f"--> {dat.name}: {game_count} games / {rom_count} roms", verbose
+            )
 
-        # Import DAT.
-        dat = parse_dat(datpath, existing_file)
-        game_count = len(dat.games)
-        rom_count = sum(len(game.roms) for game in dat.games)
-        pending_rows += 1 + game_count + rom_count
-        session.add(dat)
-        log.info(f"--> {dat.name}: {game_count} games / {rom_count} roms")
-
-        if pending_rows >= 10000:
-            # Avoid transactions getting too large.
-            session.commit()
-            pending_rows = 0
+            if pending_rows >= 10000:
+                # Avoid transactions getting too large.
+                session.commit()
+                pending_rows = 0
 
     session.commit()
-    log.info("Import complete.")
+    rommer.vlog("Import complete.", verbose)
