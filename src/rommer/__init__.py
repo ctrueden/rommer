@@ -234,6 +234,26 @@ def session():
         md5 = Column(String)
         sha1 = Column(String)
 
+        # Enhanced metadata fields
+        regions = Column(String)  # Comma-separated: "USA,Europe"
+        primary_region = Column(String)  # "USA"
+        languages = Column(String)  # Comma-separated: "En,Fr"
+        version = Column(String)  # "v1.2"
+        revision = Column(String)  # "Rev 1"
+        status = Column(String)  # "Alpha", "Beta", "Proto", "Production"
+        dump_status = Column(String)  # "verified", "bad", "good"
+        video_standard = Column(String)  # "NTSC", "PAL"
+        category = Column(String)  # "Games", "Demo", "BIOS", etc.
+        product_code = Column(String)  # "SLUS-12345"
+        disc_info = Column(String)  # "Disc 1", "Side A"
+        edition = Column(String)  # "GotY", "OEM", etc.
+        date = Column(String)  # Release date if available
+
+        # Normalized names for grouping and searching
+        short_name = Column(String)  # "metal gear solid (disc 1)"
+        group_name = Column(String)  # "metal gear solid"
+        region_free_name = Column(String)  # "Metal Gear Solid (Disc 1) (v1.2)"
+
         game = relationship("Game", back_populates="roms")
 
         def __repr__(self):
