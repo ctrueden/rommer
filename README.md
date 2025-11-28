@@ -1,6 +1,6 @@
 # Rommer: Wrangle your ROMs
 
-Rommer is a simple tool for managing collections of binary ROM files.
+Rommer is a tool for managing collections of binary ROM files.
 
 ## Installation
 
