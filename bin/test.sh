@@ -2,19 +2,13 @@
 
 # Usage examples:
 #   bin/test.sh
-#   bin/test.sh test_appose.py
-#   bin/test.sh test_appose.py::test_groovy
+#   bin/test.sh tests/test_metadata.py
+#   bin/test.sh tests/test_metadata.py::test_metadata_extraction
 
 set -e
 
 dir=$(dirname "$0")
 cd "$dir/.."
-
-if [ ! -d target/dependency ]
-then
-  echo "==> Installing appose-java..."
-  mvn -f appose.pom dependency:copy-dependencies
-fi
 
 if [ $# -gt 0 ]
 then
