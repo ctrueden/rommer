@@ -22,7 +22,7 @@ These values are counted, then hashed with their adjacent triple:
 
     ABC, BCD, CDE, DEF, EFG, FGH, GHI, etc.
     ^^^            ^^^
-     \--------------/
+     \\--------------/
             |
            A-F, B-G, C-H, D-I, E-J, F-K, G-L, etc.
 
@@ -30,7 +30,7 @@ These combined 24-bit values are then counted and merged again:
 
            A-F, B-G, C-H, D-I, E-J, F-K, G-L, etc.
            ^^^                           ^^^
-            \-----------------------------/
+            \\-----------------------------/
                            |
                           A-L, B-M, C-N, etc.
 

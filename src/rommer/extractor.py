@@ -56,22 +56,22 @@ class MetadataExtractor:
                 - region_free_name: Title without region tags
         """
         return {
-            'regions': self._extract_regions(title),
-            'primary_region': self._get_primary_region(title),
-            'languages': self._extract_languages(title),
-            'version': self._extract_version(title),
-            'revision': self._extract_revision(title),
-            'status': self._extract_status(title),
-            'dump_status': self._extract_dump_status(title),
-            'video_standard': self._extract_video_standard(title),
-            'category': self._extract_category(title),
-            'product_code': self._extract_product_code(title),
-            'disc_info': self._extract_disc_info(title),
-            'edition': self._extract_edition(title),
-            'date': self._extract_date(title),
-            'short_name': self._generate_short_name(title),
-            'group_name': self._generate_group_name(title),
-            'region_free_name': self._generate_region_free_name(title),
+            "regions": self._extract_regions(title),
+            "primary_region": self._get_primary_region(title),
+            "languages": self._extract_languages(title),
+            "version": self._extract_version(title),
+            "revision": self._extract_revision(title),
+            "status": self._extract_status(title),
+            "dump_status": self._extract_dump_status(title),
+            "video_standard": self._extract_video_standard(title),
+            "category": self._extract_category(title),
+            "product_code": self._extract_product_code(title),
+            "disc_info": self._extract_disc_info(title),
+            "edition": self._extract_edition(title),
+            "date": self._extract_date(title),
+            "short_name": self._generate_short_name(title),
+            "group_name": self._generate_group_name(title),
+            "region_free_name": self._generate_region_free_name(title),
         }
 
     def _extract_regions(self, title: str) -> list[str]:
@@ -94,7 +94,7 @@ class MetadataExtractor:
         if match:
             # Get the full language string and split by comma
             lang_str = match.group(1)
-            return [lang.strip() for lang in lang_str.split(',')]
+            return [lang.strip() for lang in lang_str.split(",")]
         return []
 
     def _extract_version(self, title: str) -> Optional[str]:
@@ -102,7 +102,7 @@ class MetadataExtractor:
         # Try standard version pattern first
         match = self.patterns.version.search(title)
         if match:
-            return match.group(0).strip('()')
+            return match.group(0).strip("()")
 
         # Try long version pattern
         match = self.patterns.long_version.search(title)
@@ -115,74 +115,74 @@ class MetadataExtractor:
         """Extract revision information."""
         match = self.patterns.revision.search(title)
         if match:
-            return match.group(0).strip('()')
+            return match.group(0).strip("()")
 
         # Check for build number
         match = self.patterns.build.search(title)
         if match:
-            return match.group(0).strip('()')
+            return match.group(0).strip("()")
 
         return None
 
     def _extract_status(self, title: str) -> str:
         """Determine the production status."""
         if self.patterns.alpha.search(title):
-            return 'Alpha'
+            return "Alpha"
         elif self.patterns.beta.search(title):
-            return 'Beta'
+            return "Beta"
         elif self.patterns.proto.search(title):
-            return 'Proto'
+            return "Proto"
         elif self.patterns.preprod.search(title):
-            return 'Pre-production'
+            return "Pre-production"
         elif self.patterns.dev.search(title):
-            return 'Dev'
+            return "Dev"
         else:
-            return 'Production'
+            return "Production"
 
     def _extract_dump_status(self, title: str) -> Optional[str]:
         """Determine the dump quality status."""
         if self.patterns.verified.search(title):
-            return 'verified'
+            return "verified"
         elif self.patterns.bad_dump.search(title):
-            return 'bad'
+            return "bad"
         elif self.patterns.good_dump.search(title):
-            return 'good'
+            return "good"
         elif self.patterns.overdump.search(title):
-            return 'overdump'
+            return "overdump"
         return None
 
     def _extract_video_standard(self, title: str) -> Optional[str]:
         """Extract video standard information."""
         if self.patterns.pal_60.search(title):
-            return 'PAL 60Hz'
+            return "PAL 60Hz"
         elif self.patterns.pal.search(title):
-            return 'PAL'
+            return "PAL"
         elif self.patterns.ntsc.search(title):
-            return 'NTSC'
+            return "NTSC"
         elif self.patterns.mpal.search(title):
-            return 'MPAL'
+            return "MPAL"
         elif self.patterns.secam.search(title):
-            return 'SECAM'
+            return "SECAM"
         return None
 
     def _extract_category(self, title: str) -> str:
         """Determine the ROM category."""
         if self.patterns.bios.search(title):
-            return 'BIOS'
+            return "BIOS"
         elif self.patterns.demo.search(title) or self.patterns.sample.search(title):
-            return 'Demo'
+            return "Demo"
         elif self.patterns.programs.search(title):
-            return 'Program'
+            return "Program"
         elif self.patterns.video.search(title):
-            return 'Video'
+            return "Video"
         elif self.patterns.multimedia.search(title):
-            return 'Multimedia'
+            return "Multimedia"
         elif self.patterns.manuals.search(title):
-            return 'Manual'
+            return "Manual"
         elif self.patterns.promotional.search(title):
-            return 'Promotional'
+            return "Promotional"
         else:
-            return 'Games'
+            return "Games"
 
     def _extract_product_code(self, title: str) -> Optional[str]:
         """Extract console-specific product codes."""
@@ -198,7 +198,7 @@ class MetadataExtractor:
         ]:
             match = pattern.search(title)
             if match:
-                return match.group(0).strip('()')
+                return match.group(0).strip("()")
 
         # Nintendo codes
         for pattern in [
@@ -207,7 +207,7 @@ class MetadataExtractor:
         ]:
             match = pattern.search(title)
             if match:
-                return match.group(0).strip('()')
+                return match.group(0).strip("()")
 
         # Sega codes
         for pattern in [
@@ -216,7 +216,7 @@ class MetadataExtractor:
         ]:
             match = pattern.search(title)
             if match:
-                return match.group(0).strip('()')
+                return match.group(0).strip("()")
 
         # Other console codes
         for pattern in [
@@ -225,7 +225,7 @@ class MetadataExtractor:
         ]:
             match = pattern.search(title)
             if match:
-                return match.group(0).strip('()')
+                return match.group(0).strip("()")
 
         return None
 
@@ -233,24 +233,24 @@ class MetadataExtractor:
         """Extract disc/side information."""
         match = self.patterns.disc.search(title)
         if match:
-            return match.group(0).strip('()')
+            return match.group(0).strip("()")
 
         match = self.patterns.side.search(title)
         if match:
-            return match.group(0).strip('()')
+            return match.group(0).strip("()")
 
         return None
 
     def _extract_edition(self, title: str) -> Optional[str]:
         """Extract edition type information."""
         if self.patterns.not_for_resale.search(title):
-            return 'Not for Resale'
+            return "Not for Resale"
         elif self.patterns.oem.search(title):
-            return 'OEM'
+            return "OEM"
         elif self.patterns.rerelease.search(title):
-            return 'Rerelease'
+            return "Rerelease"
         elif self.patterns.aftermarket.search(title):
-            return 'Aftermarket'
+            return "Aftermarket"
         return None
 
     def _extract_date(self, title: str) -> Optional[str]:
@@ -258,7 +258,7 @@ class MetadataExtractor:
         for pattern in self.patterns.dates:
             match = pattern.search(title)
             if match:
-                return match.group(0).strip('()')
+                return match.group(0).strip("()")
         return None
 
     def _generate_short_name(self, title: str) -> str:
@@ -271,27 +271,27 @@ class MetadataExtractor:
         name = title
 
         # Remove region tags
-        name = self.patterns.region_pattern.sub('', name)
+        name = self.patterns.region_pattern.sub("", name)
 
         # Remove language tags
-        name = self.patterns.language_pattern.sub('', name)
+        name = self.patterns.language_pattern.sub("", name)
 
         # Remove version/revision
-        name = self.patterns.version.sub('', name)
-        name = self.patterns.long_version.sub('', name)
-        name = self.patterns.revision.sub('', name)
-        name = self.patterns.build.sub('', name)
+        name = self.patterns.version.sub("", name)
+        name = self.patterns.long_version.sub("", name)
+        name = self.patterns.revision.sub("", name)
+        name = self.patterns.build.sub("", name)
 
         # Remove video standards
-        name = self.patterns.ntsc.sub('', name)
-        name = self.patterns.pal.sub('', name)
-        name = self.patterns.mpal.sub('', name)
-        name = self.patterns.secam.sub('', name)
+        name = self.patterns.ntsc.sub("", name)
+        name = self.patterns.pal.sub("", name)
+        name = self.patterns.mpal.sub("", name)
+        name = self.patterns.secam.sub("", name)
 
         # Remove dump status
-        name = self.patterns.verified.sub('', name)
-        name = self.patterns.bad_dump.sub('', name)
-        name = self.patterns.good_dump.sub('', name)
+        name = self.patterns.verified.sub("", name)
+        name = self.patterns.bad_dump.sub("", name)
+        name = self.patterns.good_dump.sub("", name)
 
         # Remove product codes
         for pattern in [
@@ -301,11 +301,11 @@ class MetadataExtractor:
             self.patterns.ps5_id,
             self.patterns.psp_id,
         ]:
-            name = pattern.sub('', name)
+            name = pattern.sub("", name)
 
         # Clean up whitespace and normalize
-        name = re.sub(r'\s+', ' ', name).strip()
-        name = re.sub(r'\s*\(\s*\)', '', name)  # Remove empty parentheses
+        name = re.sub(r"\s+", " ", name).strip()
+        name = re.sub(r"\s*\(\s*\)", "", name)  # Remove empty parentheses
 
         return name.lower()
 
@@ -319,15 +319,15 @@ class MetadataExtractor:
         name = self._generate_short_name(title)
 
         # Remove disc/side information
-        name = self.patterns.disc.sub('', name)
-        name = self.patterns.side.sub('', name)
+        name = self.patterns.disc.sub("", name)
+        name = self.patterns.side.sub("", name)
 
         # Remove alternate markers
-        name = self.patterns.alt.sub('', name)
+        name = self.patterns.alt.sub("", name)
 
         # Clean up again
-        name = re.sub(r'\s+', ' ', name).strip()
-        name = re.sub(r'\s*\(\s*\)', '', name)
+        name = re.sub(r"\s+", " ", name).strip()
+        name = re.sub(r"\s*\(\s*\)", "", name)
 
         return name
 
@@ -337,10 +337,10 @@ class MetadataExtractor:
 
         Useful for displaying titles without region clutter.
         """
-        name = self.patterns.region_pattern.sub('', title)
+        name = self.patterns.region_pattern.sub("", title)
 
         # Clean up whitespace
-        name = re.sub(r'\s+', ' ', name).strip()
-        name = re.sub(r'\s*\(\s*\)', '', name)
+        name = re.sub(r"\s+", " ", name).strip()
+        name = re.sub(r"\s*\(\s*\)", "", name)
 
         return name

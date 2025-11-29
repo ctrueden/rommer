@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 # Add src to path so we can import rommer modules
-sys.path.insert(0, str(Path(__file__).parent / 'src'))
+sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from rommer.extractor import MetadataExtractor
 
@@ -23,70 +23,71 @@ def test_metadata_extraction():
     # Test cases with expected metadata
     test_cases = [
         {
-            'title': 'Metal Gear Solid (USA) (Disc 1) (Rev 1)',
-            'expected': {
-                'primary_region': 'USA',
-                'revision': 'Rev 1',
-                'disc_info': 'Disc 1',
-                'status': 'Production',
-                'category': 'Games',
-            }
+            "title": "Metal Gear Solid (USA) (Disc 1) (Rev 1)",
+            "expected": {
+                "primary_region": "USA",
+                "revision": "Rev 1",
+                "disc_info": "Disc 1",
+                "status": "Production",
+                "category": "Games",
+            },
         },
         {
-            'title': 'Super Mario 64 (Europe) (En,Fr,De)',
-            'expected': {
-                'primary_region': 'Europe',
-                'languages': ['En', 'Fr', 'De'],
-                'category': 'Games',
-            }
+            "title": "Super Mario 64 (Europe) (En,Fr,De)",
+            "expected": {
+                "primary_region": "Europe",
+                "languages": ["En", "Fr", "De"],
+                "category": "Games",
+            },
         },
         {
-            'title': 'Sonic the Hedgehog (USA, Europe) (Beta)',
-            'expected': {
-                'regions': ['USA', 'Europe'],
-                'status': 'Beta',
-            }
+            "title": "Sonic the Hedgehog (USA, Europe) (Beta)",
+            "expected": {
+                "regions": ["USA", "Europe"],
+                "status": "Beta",
+            },
         },
         {
-            'title': 'Final Fantasy VII (USA) (Disc 1) (v1.1) [!]',
-            'expected': {
-                'primary_region': 'USA',
-                'version': 'v1.1',
-                'disc_info': 'Disc 1',
-                'dump_status': 'verified',
-            }
+            "title": "Final Fantasy VII (USA) (Disc 1) (v1.1) [!]",
+            "expected": {
+                "primary_region": "USA",
+                "version": "v1.1",
+                "disc_info": "Disc 1",
+                "dump_status": "verified",
+            },
         },
         {
-            'title': 'Legend of Zelda, The - Ocarina of Time (USA) (Demo)',
-            'expected': {
-                'primary_region': 'USA',
-                'category': 'Demo',
-            }
+            "title": "Legend of Zelda, The - Ocarina of Time (USA) (Demo)",
+            "expected": {
+                "primary_region": "USA",
+                "category": "Demo",
+            },
         },
         {
-            'title': 'Pokemon Red Version (USA) (SLUS-00123)',
-            'expected': {
-                'primary_region': 'USA',
-                'product_code': 'SLUS-00123',
-            }
+            "title": "Pokemon Red Version (USA) (SLUS-00123)",
+            "expected": {
+                "primary_region": "USA",
+                "product_code": "SLUS-00123",
+            },
         },
         {
-            'title': 'Gran Turismo (USA) (v1.2) (PAL)',
-            'expected': {
-                'primary_region': 'USA',
-                'version': 'v1.2',
-                'video_standard': 'PAL',
-            }
+            "title": "Gran Turismo (USA) (v1.2) (PAL)",
+            "expected": {
+                "primary_region": "USA",
+                "version": "v1.2",
+                "video_standard": "PAL",
+            },
         },
     ]
 
     print("Testing metadata extraction...")
     print("=" * 70)
 
-    all_passed = True
+    pass_count = 0
+    fail_count = 0
     for i, test in enumerate(test_cases, 1):
-        title = test['title']
-        expected = test['expected']
+        title = test["title"]
+        expected = test["expected"]
 
         print(f"\nTest {i}: {title}")
         print("-" * 70)
@@ -100,26 +101,33 @@ def test_metadata_extraction():
             match = actual_value == expected_value
 
             status = "✓" if match else "✗"
-            print(f"  {status} {key}: {actual_value} {'==' if match else '!='} {expected_value}")
+            print(
+                f"  {status} {key}: {actual_value} {'==' if match else '!='} {expected_value}"
+            )
 
             if not match:
                 passed = False
-                all_passed = False
+                break
+
+        if passed:
+            pass_count += 1
+        else:
+            fail_count += 1
 
         # Show other extracted fields
-        print(f"\n  Additional metadata:")
+        print("\n  Additional metadata:")
         for key, value in metadata.items():
             if key not in expected and value:
                 print(f"    {key}: {value}")
 
     print("\n" + "=" * 70)
-    if all_passed:
-        print("✓ All tests passed!")
+    if fail_count == 0:
+        print(f"✓ {pass_count}/{pass_count} tests passed!")
         return 0
     else:
-        print("✗ Some tests failed")
+        print(f"✗ {fail_count}/{pass_count + fail_count} tests failed")
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(test_metadata_extraction())
